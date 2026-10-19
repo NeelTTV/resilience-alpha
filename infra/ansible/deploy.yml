@@ -1,0 +1,13 @@
+- name: Deploy the lab on the host (Linux or WSL2 with Docker integration)
+  hosts: host
+  gather_facts: false
+  vars:
+    project_dir: "{{ playbook_dir }}/../.."
+  tasks:
+    - name: Build and start application services
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_dir }}"
+        build: always
+        state: present
+        wait: true
+

@@ -1,0 +1,6 @@
+-r services/requirements.in
+httpx>=0.28,<1
+pytest>=8,<10
+ruff>=0.14,<1
+PyYAML>=6,<7
+
