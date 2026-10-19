@@ -14,14 +14,18 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 from services.common.config import secret
 from services.common.security import current_user
 from services.common.telemetry import instrument
+from services.payment.capacity import admission
 
 
 def database_url():
     if os.getenv("DATABASE_URL"):
         return os.environ["DATABASE_URL"]
     return URL.create(
-        "postgresql+psycopg", username="resilience", password=secret("POSTGRES_PASSWORD"),
-        host=os.getenv("DB_HOST", "db"), database="resilience",
+        "postgresql+psycopg",
+        username="resilience",
+        password=secret("POSTGRES_PASSWORD"),
+        host=os.getenv("DB_HOST", "db"),
+        database="resilience",
     )
 
 
@@ -45,7 +49,7 @@ class Transaction(Base):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    secret("JWT_SECRET")
+    secret("JWT_PUBLIC_KEY")
     Base.metadata.create_all(engine)
     yield
     engine.dispose()
@@ -53,6 +57,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Resilience Alpha - Simulated Payments", lifespan=lifespan)
 instrument(app, "payment")
+app.middleware("http")(admission)
 
 
 class PaymentInput(BaseModel):
@@ -81,8 +86,10 @@ def health(db: Session = Depends(session)):
 @app.get("/transactions", response_model=list[PaymentOutput])
 def transactions(user: str = Depends(current_user), db: Session = Depends(session)):
     return db.scalars(
-        select(Transaction).where(Transaction.owner == user)
-        .order_by(Transaction.created_at.desc()).limit(100)
+        select(Transaction)
+        .where(Transaction.owner == user)
+        .order_by(Transaction.created_at.desc())
+        .limit(100)
     ).all()
 
 
@@ -94,11 +101,14 @@ def pay(
     db: Session = Depends(session),
 ):
     def existing():
-        previous = db.scalar(select(Transaction).where(
-            Transaction.idempotency_key == idempotency_key,
-        ))
+        previous = db.scalar(
+            select(Transaction).where(
+                Transaction.idempotency_key == idempotency_key,
+            )
+        )
         if previous and (
-            previous.owner != user or previous.amount_cents != body.amount_cents
+            previous.owner != user
+            or previous.amount_cents != body.amount_cents
             or previous.currency != body.currency
         ):
             raise HTTPException(409, "Idempotency key already used with different data")
@@ -107,9 +117,13 @@ def pay(
     if previous := existing():
         return previous
     transaction = Transaction(
-        id=str(uuid.uuid4()), owner=user, idempotency_key=idempotency_key,
-        amount_cents=body.amount_cents, currency=body.currency,
-        created_at=datetime.now(timezone.utc), status="completed",
+        id=str(uuid.uuid4()),
+        owner=user,
+        idempotency_key=idempotency_key,
+        amount_cents=body.amount_cents,
+        currency=body.currency,
+        created_at=datetime.now(timezone.utc),
+        status="completed",
     )
     db.add(transaction)
     try:
@@ -121,4 +135,3 @@ def pay(
         raise
     db.refresh(transaction)
     return transaction
-

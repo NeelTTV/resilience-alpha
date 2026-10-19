@@ -1,44 +1,37 @@
-# Architecture initiale
+# Architecture livrée
 
-## Chemin métier livré
+Client -> WAF ModSecurity/OWASP CRS -> Nginx/React -> auth ou API -> PostgreSQL.
+Seul le WAF publie les ports applicatifs HTTP/TLS. Il écrase l'identité source reçue.
+JWT RS256 de 15 min : clé privée dans auth, clé publique dans les services lecteurs.
+Compte de vérification distinct `recovery-check` et idempotence métier persistante.
 
-Navigateur -> proxy Nginx/dashboard -> auth ou API -> PostgreSQL.
-Le proxy publie uniquement health, token et transactions. Les services et la base
-n'ont pas de ports hôte. Les données métier persistent dans le volume PostgreSQL.
-Chaque transaction a une référence UUID, un propriétaire et une clé d'idempotence unique.
-Les requêtes SQL passent par SQLAlchemy ; aucun SQL provenant des entrées utilisateur.
+Les logs WAF/API sont lus depuis des volumes par le superviseur, enregistrés avec
+offsets puis envoyés vers Loki. Prometheus collecte les métriques, Grafana affiche
+les sources provisionnées. Le superviseur offre une fonction SOC et conserve les
+incidents, preuves et états dans SQLite. Aucune donnée de corps ou de jeton n'est collectée.
 
-Prometheus interroge `/metrics` sur auth/API toutes les cinq secondes. Grafana présente
-disponibilité, débit et latence. Loki est configuré comme source, sans collecteur pour
-l'instant. Les services émettent des messages JSON sans corps de requête ni jeton.
-Les logs d'accès Uvicorn sont désactivés ; les métriques distinguent routes, codes et durées.
+Le détecteur charge un OneClassSVM RBF appris sur le trafic normal observé. Un score
+anormal sur deux cycles peut créer un incident ; une politique de sécurité réserve
+la quarantaine à une source dominante non protégée. Les sources de calibration et
+les composants de contrôle sont protégés. Ne jamais calibrer pendant l'attaque.
 
-## Chaîne de résilience à raccorder
+Le superviseur appelle l'exécuteur sur le réseau control interne avec une clé dédiée.
+L'exécuteur valide IP/CIDR/UUID, n'accepte qu'une quarantaine de 300 s et écrit la
+politique atomiquement via Ansible. L'API monte cette politique en lecture seule.
+Aucun service applicatif ne dispose du socket Docker. Le moteur vérifie un nouveau
+paiement à travers le WAF et relit les opérations précédentes avant `recovered`.
 
-Signaux Prometheus/Loki -> détecteur ML -> événement d'incident authentifié ->
-automate de remédiation -> exécuteur Ansible limité -> vérification métier -> état final.
-Les contrats prévus sont dans `services/detector` et `services/remediation`.
-Ollama + futur RAG LangChain consultent les procédures, sans droit d'action sur les conteneurs.
+Le RAG consulte les fichiers Markdown via TF-IDF et LangChain/ChatOllama. Il ne monte
+ni politique ni secret de remédiation. Modèle CPU 0.6B par défaut, allowlist <=8B,
+sources citées et mode dégradé explicite.
 
-## Décisions et limites
+Limites : un seul hôte, comptes de labo, absence de révocation/MFA, volume local sans
+haute disponibilité, sources protégées compromises hors remédiation, scénario à une
+source, schéma initialisé par create_all sans migrations. Une quarantaine ne corrige
+ni exfiltration ni compromission. Voir `governance.md` pour les risques et le PCA/PRA.
 
-- Python commun aux API et à la future détection pour limiter les interfaces en quatre jours.
-- React/TypeScript/Tailwind pour le dashboard conformément au sujet.
-- Deux services auth/API distincts, une base métier. Pas de système de paiement existant.
-- Compte opérateur unique de laboratoire. Aucun registre d'utilisateurs, révocation ou RBAC.
-- HS256 partagé auth/API à remplacer par clés asymétriques si isolation renforcée.
-- `create_all` initialise le schéma ; ajouter Alembic avant toute évolution du modèle livré.
-- Volumes locaux : pas de haute disponibilité, réplication, sauvegarde ou PRA démontré.
-- Réseau Compose partagé : absence de ports hôte ne remplace pas une segmentation complète.
-- Pas de socket Docker exposé aux applications et pas d'exécuteur privilégié dans ce setup.
-- HTTP sur localhost pour développer ; TLS, WAF et contrôle de débit requis avant exposition LAN.
-- Secrets locaux ignorés, montés par fichiers ; Vault/SOPS reste un chantier explicite.
-
-## Références techniques
-
-- [FastAPI dans Docker](https://fastapi.tiangolo.com/deployment/docker/)
-- [Vite 6 : installation](https://v6.vite.dev/guide/)
-- [Secrets Docker Compose](https://docs.docker.com/compose/how-tos/use-secrets/)
-
-Les documents fournis servent de cahier des charges ; ils n'autorisent aucune action
-sur le campus, un service tiers ou la publication des livrables.
+Références techniques : [FastAPI](https://fastapi.tiangolo.com/deployment/docker/),
+[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.svm.OneClassSVM.html),
+[CRS](https://github.com/coreruleset/modsecurity-crs-docker),
+[Loki](https://grafana.com/docs/loki/latest/reference/loki-http-api/),
+[LangChain/Ollama](https://docs.langchain.com/oss/python/integrations/chat/ollama).

@@ -4,4 +4,9 @@ SQLAlchemy>=2.0,<2.1
 psycopg[binary]>=3.2,<4
 PyJWT>=2.10,<3
 prometheus-client>=0.22,<1
+httpx>=0.28,<1
+scikit-learn>=1.7,<2
+langchain-core>=1,<2
+langchain-ollama>=1,<2
+cryptography>=46,<50
 

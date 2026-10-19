@@ -1,0 +1,9 @@
+- name: Quarantine approved lab sources in the shared application admission policy
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Atomically publish the validated source policy
+      ansible.builtin.copy:
+        dest: /policy/blocks.json
+        content: "{{ blocks | to_json }}"
+        mode: '0644'

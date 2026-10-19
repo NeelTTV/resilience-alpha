@@ -1,13 +1,8 @@
-# Détection ML - contrat à implémenter
+# Détection ML
 
-Entrées : séries Prometheus (débit, erreurs, latence) et événements Loki.
-Enregistrer des fenêtres normales et perturbées avec horodatage et scénario.
-Séparer apprentissage et évaluation, conserver les données et paramètres.
-Isolation Forest est une première piste à comparer ; aucun modèle n'est encore entraîné.
-
-Sortie proposée vers le moteur de remédiation :
-`{incident_id, detected_at, service, model_version, anomaly_score, evidence}`.
-La route doit être interne, authentifiée et protégée contre les doublons/rejeux.
-Mesurer faux positifs, incidents manqués, délai de détection et dérive du modèle.
-Aucun simple seuil de disponibilité ne doit être présenté comme du ML.
-
+Implémentation : `services/supervisor/model.py`, boucle `services/supervisor/main.py`.
+Calibration : `scripts/calibrate.py --seconds 75`, uniquement sans attaque.
+Fenêtres réelles par source, StandardScaler + OneClassSVM RBF, split chronologique
+et frontière calibrée sur données normales. Deux décisions anormales sont requises.
+La politique de sécurité protège les sources normales de calibration et les composants
+de contrôle. Les métriques de calibration ne remplacent pas une évaluation indépendante.

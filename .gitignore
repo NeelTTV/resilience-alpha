@@ -15,4 +15,7 @@ output/
 data/
 *.agekey
 *.log
+.tools/
+tmp/
+*.bak
 

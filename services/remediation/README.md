@@ -1,13 +1,7 @@
-# Reprise autonome - contrat à implémenter
+# Reprise autonome
 
-Machine à états prévue : observed -> detected -> recovering -> verifying -> recovered/failed.
-Accepter uniquement des services et actions explicitement autorisés ; sérialiser les actions,
-dédupliquer incident_id, limiter les tentatives et conserver un journal horodaté.
-
-Prévoir un exécuteur Ansible isolé avec droits limités. Aucun socket Docker n'est monté dans
-l'application, le futur détecteur ou le RAG. Ne jamais accepter une commande arbitraire.
-Un redémarrage Docker automatique ne démontre pas une remédiation pilotée par le ML.
-
-La validation exige une nouvelle transaction avec une nouvelle clé d'idempotence et une
-vérification des anciennes données. Ne déclarer recovered qu'après cette vérification.
-
+Automate : `services/supervisor/main.py`. Exécuteur : `services/executor/main.py`.
+Playbook : `infra/ansible/quarantine.yml`. États persistés detected, recovering,
+verifying, recovered et failed. Quarantaine 300 s, une action autorisée, CIDR validés,
+clé distincte, aucun socket Docker et cinq vérifications métier maximum.
+Procédure et limites : `docs/runbook-recovery.md`.

@@ -7,6 +7,8 @@ export default defineConfig({
     proxy: {
       '/api/': { target: 'http://127.0.0.1:8000', rewrite: p => p.replace(/^\/api/, '') },
       '/auth/': { target: 'http://127.0.0.1:8001', rewrite: p => p.replace(/^\/auth/, '') },
+      '/control/': { target: 'http://127.0.0.1:8002', rewrite: p => p.replace(/^\/control/, '') },
+      '/assistant/': { target: 'http://127.0.0.1:8003', rewrite: p => p.replace(/^\/assistant/, '') },
     },
   },
 })

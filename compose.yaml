@@ -9,6 +9,7 @@ x-python: &python
   tmpfs: [/tmp]
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
+  group_add: ['${SECRET_GID:-0}']
   networks: [backend]
   healthcheck:
     test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
@@ -37,24 +38,30 @@ services:
     <<: *python
     command: [uvicorn, services.auth.main:app, --host, 0.0.0.0, --port, '8000', --no-access-log]
     environment:
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_PRIVATE_KEY_FILE: /run/secrets/jwt_private_key
       DEMO_PASSWORD_HASH_FILE: /run/secrets/demo_password_hash
+      RECOVERY_PASSWORD_HASH_FILE: /run/secrets/recovery_password_hash
       DEMO_USERNAME: ${DEMO_USERNAME:-operator}
-    secrets: [jwt_secret, demo_password_hash]
+      LOG_DIR: /logs
+    secrets: [jwt_private_key, demo_password_hash, recovery_password_hash]
+    volumes: [app_logs:/logs]
 
   api:
     <<: *python
     environment:
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets: [jwt_secret, postgres_password]
+      LOG_DIR: /logs
+      LAB_CAPACITY_ENABLED: ${LAB_CAPACITY_ENABLED:-true}
+      CAPACITY_RPS: '20'
+    secrets: [jwt_public_key, postgres_password]
+    volumes: [app_logs:/logs, quarantine_policy:/policy:ro]
     depends_on:
       db: {condition: service_healthy}
 
   dashboard:
     build: ./apps/dashboard
     restart: unless-stopped
-    ports: ["${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:8080"]
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -63,15 +70,83 @@ services:
     depends_on:
       api: {condition: service_healthy}
       auth: {condition: service_healthy}
+      supervisor: {condition: service_healthy}
+      assistant: {condition: service_healthy}
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1:8080/health']
       interval: 10s
       timeout: 3s
       retries: 5
 
+  waf:
+    build: ./infra/waf
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:8443"
+    environment:
+      BACKEND: http://dashboard:8080
+      MODSEC_RULE_ENGINE: 'On'
+      MODSEC_AUDIT_ENGINE: 'Off'
+      BLOCKING_PARANOIA: '1'
+      NGINX_WORKER_PROCESSES: '2'
+    volumes:
+      - ./infra/waf/default.conf.template:/etc/nginx/templates/conf.d/default.conf.template:ro
+      - ./infra/waf/proxy.conf:/etc/nginx/lab-proxy.conf:ro
+      - waf_logs:/logs
+    secrets: [tls_cert, tls_key]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    group_add: ['${SECRET_GID:-0}']
+    networks: [backend]
+    depends_on:
+      dashboard: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, curl, -fsS, 'http://127.0.0.1:8080/healthz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  supervisor:
+    <<: *python
+    command: [uvicorn, services.supervisor.main:app, --host, 0.0.0.0, --port, '8000', --no-access-log]
+    environment:
+      JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+      REMEDIATION_KEY_FILE: /run/secrets/remediation_key
+      RECOVERY_PASSWORD_FILE: /run/secrets/recovery_password
+    secrets: [jwt_public_key, remediation_key, recovery_password]
+    volumes:
+      - supervisor_data:/state
+      - app_logs:/logs:ro
+      - waf_logs:/waf-logs:ro
+    networks: [backend, control]
+
+  executor:
+    <<: *python
+    build:
+      context: .
+      dockerfile: services/executor/Dockerfile
+    environment:
+      REMEDIATION_KEY_FILE: /run/secrets/remediation_key
+      LAB_CIDRS: ${LAB_CIDRS:-172.16.0.0/12,192.168.137.0/24}
+      ANSIBLE_LOCAL_TEMP: /tmp/ansible-local
+      ANSIBLE_REMOTE_TEMP: /tmp/ansible-remote
+    secrets: [remediation_key]
+    volumes: [quarantine_policy:/policy]
+    networks: [control]
+
+  assistant:
+    <<: *python
+    command: [uvicorn, services.assistant.main:app, --host, 0.0.0.0, --port, '8000', --no-access-log]
+    environment:
+      JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:0.6b}
+    secrets: [jwt_public_key]
+    volumes: [./docs:/app/docs:ro]
+
   prometheus:
     image: prom/prometheus:v3.5.0
-    profiles: [observability]
     command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.retention.time=2d]
     volumes:
       - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -83,7 +158,6 @@ services:
 
   loki:
     image: grafana/loki:3.5.3
-    profiles: [observability]
     command: [-config.file=/etc/loki/config.yaml]
     volumes:
       - ./infra/observability/loki.yaml:/etc/loki/config.yaml:ro
@@ -94,12 +168,13 @@ services:
 
   grafana:
     image: grafana/grafana:12.1.1
-    profiles: [observability]
     environment:
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_password
       GF_USERS_ALLOW_SIGN_UP: 'false'
       GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_PLUGINS_PREINSTALL_DISABLED: 'true'
     secrets: [grafana_password]
+    group_add: ['${SECRET_GID:-0}']
     volumes:
       - ./infra/observability/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - ./infra/observability/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
@@ -119,6 +194,8 @@ services:
 
 networks:
   backend:
+  control:
+    internal: true
 
 volumes:
   postgres_data:
@@ -126,10 +203,20 @@ volumes:
   loki_data:
   grafana_data:
   ollama_data:
+  app_logs:
+  waf_logs:
+  quarantine_policy:
+  supervisor_data:
 
 secrets:
   postgres_password: {file: ./.secrets/postgres_password}
-  jwt_secret: {file: ./.secrets/jwt_secret}
   demo_password_hash: {file: ./.secrets/demo_password_hash}
   grafana_password: {file: ./.secrets/grafana_password}
+  jwt_private_key: {file: ./.secrets/jwt_private_key}
+  jwt_public_key: {file: ./.secrets/jwt_public_key}
+  recovery_password: {file: ./.secrets/recovery_password}
+  recovery_password_hash: {file: ./.secrets/recovery_password_hash}
+  remediation_key: {file: ./.secrets/remediation_key}
+  tls_cert: {file: ./.secrets/tls_cert}
+  tls_key: {file: ./.secrets/tls_key}
 

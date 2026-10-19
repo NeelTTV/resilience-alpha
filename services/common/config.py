@@ -8,4 +8,3 @@ def secret(name: str) -> str:
     if not value:
         raise RuntimeError(f"Missing secret: {name}_FILE")
     return value
-

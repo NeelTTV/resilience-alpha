@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-body { @apply m-0 bg-slate-950 text-slate-100 antialiased; }
+body { @apply m-0 bg-slate-950 font-sans text-slate-100 antialiased; }
 input { @apply w-full rounded border border-slate-600 bg-slate-900 px-3 py-2; }
 button { @apply rounded bg-cyan-300 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50; }
 button:focus-visible, input:focus-visible { @apply outline outline-2 outline-offset-4 outline-cyan-200; }

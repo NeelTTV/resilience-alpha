@@ -1,6 +1,7 @@
 import { StrictMode, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { createRoot } from 'react-dom/client'
 import './style.css'
+import { Operations } from './Operations'
 
 type Transaction = { id: string; amount_cents: number; currency: string; status: string; created_at: string }
 
@@ -77,7 +78,7 @@ function App() {
     <h1 className="mt-3 text-4xl font-bold">Resilience Alpha</h1>
     <p className="mt-4 text-slate-400">Paiements fictifs et supervision du laboratoire.</p>
     <div className="my-8 border-y border-slate-700 py-5" role="status" aria-live="polite">{status}</div>
-    <p className="mb-8 text-sm text-amber-200">Socle de développement : détection ML et reprise autonome à intégrer.</p>
+    <p className="mb-8 text-sm text-amber-200">Laboratoire de paiement fictif · scénario de saturation contrôlée.</p>
     {error && <p role="alert" className="mb-6 text-rose-300">{error}</p>}
     {!token ? <form onSubmit={login} className="max-w-sm space-y-4">
       <h2 className="text-xl font-semibold">Connexion opérateur</h2>
@@ -89,6 +90,7 @@ function App() {
         <label className="grow">Montant fictif (€)<input type="number" min="0.01" max="1000000" step="0.01" value={amount} disabled={!!pending} onChange={e => setAmount(e.target.value)} required /></label>
         <button disabled={busy}>{busy ? 'Traitement…' : pending ? 'Réessayer le paiement' : 'Créer un paiement'}</button>
       </form>
+      <Operations token={token} />
       <h2 className="mb-4 mt-12 text-xl font-semibold">Transactions récentes</h2>
       <div className="overflow-x-auto"><table className="w-full text-left text-sm">
         <caption className="sr-only">100 dernières transactions de votre compte</caption>

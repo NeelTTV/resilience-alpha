@@ -38,9 +38,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install -r services/requirements.lock
       - run: python scripts/init-secrets.py
       - run: docker compose up --build -d --wait
       - run: python scripts/smoke.py
+      - run: python scripts/calibrate.py --seconds 75
+      - run: python scripts/demo.py
+      - run: python scripts/confirm_model.py
+      - run: python scripts/backup_check.py
+      - run: python scripts/security_check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resilience-evidence
+          path: output/evidence
       - if: failure()
         run: docker compose logs --tail=100
       - if: always()

@@ -7,4 +7,7 @@ scrape_configs:
   - job_name: auth
     static_configs:
       - targets: ['auth:8000']
+  - job_name: supervisor
+    static_configs:
+      - targets: ['supervisor:8000']
 

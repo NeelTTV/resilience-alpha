@@ -1,6 +1,9 @@
 import json
 import logging
+import os
 import time
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
@@ -8,6 +11,39 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_
 REQUESTS = Counter("http_requests_total", "HTTP requests", ["service", "method", "route", "status"])
 LATENCY = Histogram("http_request_duration_seconds", "Request duration", ["service", "route"])
 logger = logging.getLogger("uvicorn.error")
+file_loggers = {}
+
+
+def record(service: str, request: Request, route: str, status: int, elapsed: float):
+    REQUESTS.labels(service, request.method, route, str(status)).inc()
+    LATENCY.labels(service, route).observe(elapsed)
+    event = {
+        "timestamp": time.time(),
+        "service": service,
+        "method": request.method,
+        "route": route,
+        "status": status,
+        "duration_seconds": round(elapsed, 6),
+        "client_ip": request.headers.get("x-lab-client-ip", "internal")[:64],
+    }
+    message = json.dumps(event)
+    logger.info(message)
+    if os.getenv("LOG_DIR"):
+        if service not in file_loggers:
+            path = Path(os.environ["LOG_DIR"])
+            path.mkdir(parents=True, exist_ok=True)
+            file_logger = logging.getLogger("audit." + service)
+            handler = RotatingFileHandler(
+                path / (service + ".jsonl"),
+                maxBytes=5_000_000,
+                backupCount=3,
+            )
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            file_logger.addHandler(handler)
+            file_logger.setLevel(logging.INFO)
+            file_logger.propagate = False
+            file_loggers[service] = file_logger
+        file_loggers[service].info(message)
 
 
 def instrument(app: FastAPI, service: str):
@@ -27,10 +63,4 @@ def instrument(app: FastAPI, service: str):
             elapsed = time.perf_counter() - start
             route = getattr(request.scope.get("route"), "path", "unmatched")
             if route != "/metrics":
-                REQUESTS.labels(service, request.method, route, str(status)).inc()
-                LATENCY.labels(service, route).observe(elapsed)
-                logger.info(json.dumps({
-                    "service": service, "method": request.method, "route": route,
-                    "status": status, "duration_seconds": round(elapsed, 6),
-                }))
-
+                record(service, request, route, status, elapsed)

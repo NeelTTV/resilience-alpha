@@ -1,0 +1,14 @@
+{
+  "name": "Resilience Alpha",
+  "team_label": "Équipe DIVET",
+  "delivery_slug": "Workshop2026-M2-Equipe-DIVET",
+  "group_number": null,
+  "roles_status": "Répartition choisie pour le projet ; contributions réalisées à consigner séparément.",
+  "members": [
+    { "name": "Ethan DIVET", "role": "DEV", "responsibility": "API, authentification, dashboard et intégration métier" },
+    { "name": "Josselin LENAOUR", "role": "INFRA", "responsibility": "Docker, Ansible, observabilité et sauvegardes" },
+    { "name": "Lucas CHEVALIER", "role": "IA/DATA", "responsibility": "Jeu de données, détection ML, évaluation et RAG" },
+    { "name": "Maxime DUSSORT", "role": "CYBER", "responsibility": "Scénario Red Team, WAF, SOC, secrets et durcissement" },
+    { "name": "Jean-christophe MALINUR", "role": "TRANSFORMATION", "responsibility": "EBIOS RM, PCA/PRA, NIS2/DORA et recommandations" }
+  ]
+}
