@@ -15,6 +15,11 @@ réajusté sur la même période normale initiale, sans utiliser les requêtes o
 Une nouvelle attaque et 45 s de trafic normal authentifié ont ensuite confirmé, sur
 un petit échantillon : 12/12 fenêtres offensives reconnues, 0 fausse alerte sur 15
 fenêtres normales. Voir `output/evidence/model-evaluation.json` et `recovery.json`.
+La confirmation a ensuite été prolongée à 180 secondes sans réentraînement :
+0 fausse alerte sur 61 fenêtres normales authentifiées. La première confirmation
+est conservée dans `model-evaluation-initial.json`, la prolongation dans
+`model-evaluation.json`. Le trafic reste celui du laboratoire, sans diversité
+de clientèle ni essai multi-jours ; il ne remplace pas une campagne sur charges variées.
 Les fenêtres sont corrélées et incluent du trafic déjà mis en quarantaine ; ces
 résultats ne prouvent ni un taux général de détection ni une performance industrielle.
 

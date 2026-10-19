@@ -1,5 +1,6 @@
 """Fresh held-out normal traffic AFTER the frozen model's recovery exercise."""
 
+import argparse
 import json
 import random
 import subprocess
@@ -9,6 +10,9 @@ import time
 from smoke import ROOT, request
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seconds", type=int, default=45, choices=range(45, 901))
+    args = parser.parse_args()
     token = request(
         "/auth/token",
         {"username": "operator", "password": (ROOT / ".secrets/demo_password").read_text().strip()},
@@ -17,9 +21,10 @@ if __name__ == "__main__":
     randomizer = random.Random(7319)
     start = time.time()
     print(
-        "Collecting 45 seconds of fresh authenticated normal traffic (no retraining).", flush=True
+        f"Collecting {args.seconds} seconds of fresh authenticated normal traffic (no retraining).",
+        flush=True,
     )
-    while time.time() - start < 45:
+    while time.time() - start < args.seconds:
         request("/api/transactions", headers=headers)
         time.sleep(randomizer.choice([0.2, 0.5, 1.0, 1.5]))
     end = time.time()

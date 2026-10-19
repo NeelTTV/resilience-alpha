@@ -49,7 +49,11 @@ def package():
         if relative.parts[0] in DIRECTORIES or relative.as_posix() in ROOT_FILES:
             entries.append((path, Path("resilience-alpha") / relative))
     for path in evidence.rglob("*"):
-        if path.is_file() and path.suffix in {".json", ".png", ".joblib"}:
+        if (
+            path.is_file()
+            and path.suffix in {".json", ".png", ".joblib"}
+            and path.name != "delivery-readiness.json"
+        ):
             entries.append((path, Path("resilience-alpha/evidence") / path.relative_to(evidence)))
     # Match complete real secret values, never print their values on a failure.
     sensitive = []
@@ -91,7 +95,9 @@ def package():
         "Code ZIP : sources, déploiement, modèle/provenance et preuves ; aucun secret en clair.\n"
         "La clé age privée n'est pas incluse. Le setup peut générer de nouveaux secrets.\n"
         "À réaliser sur les machines du groupe : essai du second PC, réseau, vidéo continue.\n"
-        "Voir docs/demo-runbook.md. Les rôles attribués ne prouvent pas les contributions.\n",
+        "Travaux attribués : docs/contributions.md ; validation personnelle à confirmer.\n"
+        "Recette terrain : docs/recette-terrain.md ; pitch : docs/soutenance.md.\n"
+        "Contrôle final : python scripts/delivery_check.py (mode --strict avant remise).\n",
         encoding="utf-8",
     )
     print(

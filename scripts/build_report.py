@@ -24,7 +24,8 @@ def build():
     calibration = json.loads((ROOT / "output/evidence/calibration.json").read_text())["model"]
     backup = json.loads((ROOT / "output/evidence/backup.json").read_text())
     evaluation = json.loads((ROOT / "output/evidence/model-evaluation.json").read_text())
-    if not recovery["passed"]:
+    reproducibility = json.loads((ROOT / "output/evidence/reproducibility.json").read_text())
+    if not recovery["passed"] or not reproducibility["passed"]:
         raise RuntimeError("A passing recovery proof is required before producing the dossier")
     incident = recovery["incident"]
     duration = round(incident["updated_at"] - incident["created_at"], 2)
@@ -73,10 +74,12 @@ def build():
                 "rétabli. Ce délai ne remplace pas le RTO depuis le début de l'indisponibilité. "
                 "L'attaquant de recette est un conteneur isolé : la validation sur un deuxième "
                 "PC physique et le Clip Chrono restent à réaliser.",
-                "Les rôles ci-dessous sont la répartition choisie à la demande de l'équipe. "
-                "Ils ne constituent pas une attestation des contributions effectivement réalisées. "
-                "Ces contributions doivent être consignées dans docs/contributions.md. Le numéro "
-                "de groupe n'étant pas connu, le nom provisoire de livraison est Équipe DIVET.",
+                "Travaux attribués par référent : Ethan, API/auth/interface ; Josselin, "
+                "déploiement/observabilité/restauration ; Lucas, ML/données/RAG ; Maxime, "
+                "attaque/WAF/secrets/privilèges ; Jean-christophe, risques/continuité/supports. "
+                "Préparation avec l'aide de Codex ; cette répartition ne prouve pas un auteur "
+                "individuel ou une recette personnelle. Les validations sont tracées dans "
+                "docs/contributions.md. Sans numéro fourni, le nom provisoire reste Équipe DIVET.",
             ],
         ),
         (
@@ -99,6 +102,12 @@ def build():
                 "aucun socket Docker. Il peut seulement écrire la politique d'admission validée dans "
                 "un volume partagé, monté en lecture seule dans l'API. La topologie reste concentrée "
                 "sur un hôte : elle n'apporte ni haute disponibilité ni tolérance à sa perte.",
+                "Un instantané indépendant des sources a été déployé avec Ansible dans un "
+                "projet Docker neuf, avec nouveaux secrets et volumes. Le second passage sans "
+                "reconstruction n'a changé aucune ressource. Authentification, paiement, "
+                "idempotence et accès par le port hôte ont été vérifiés, puis le projet d'essai "
+                "supprimé. Preuve : output/evidence/reproducibility.json. Le moteur Docker reste "
+                "celui de ce poste ; ce résultat ne valide pas l'installation d'un autre PC.",
             ],
         ),
         (
@@ -235,6 +244,12 @@ def build():
                 "l'apparition de la saturation et RPO nul pour les paiements confirmés dans ce "
                 "scénario sans restauration. Aucun de ces objectifs ne couvre une perte de l'hôte. "
                 "Le temps détection/reprise de la recette n'inclut pas toute la phase précédente.",
+                "Justification métier hypothétique : 30 paiements/minute, panier de 25 EUR, "
+                "commission de 0,20 EUR et 50 % d'abandon. Le flux interrompu est 750 EUR/min, "
+                "distinct de la perte de commissions de 3 EUR/min. Deux personnes mobilisées "
+                "20 min à 45 EUR/h ajoutent 30 EUR. Une coupure de 5 min coûterait 45 EUR ; "
+                "30 s représenteraient 1,50 EUR de commissions perdues. Hypothèses pédagogiques "
+                "à valider, hors confiance et pénalités, sans revenu réel mesuré.",
                 f"La sauvegarde PostgreSQL a été restaurée dans une base neuve en "
                 f"{backup['restore_seconds']} secondes sur ce poste. Le test compare le nombre "
                 "de transactions et l'empreinte de leur contenu trié. Il supprime uniquement "
@@ -265,15 +280,21 @@ def build():
                 "réglementaire, gouvernance d'une entité financière réelle, surveillance des tiers, "
                 "programme de tests représentatif ou certification. Une matrice d'écarts relie "
                 "ces thèmes aux composants et preuves dans docs/governance.md.",
+                "La direction fictive est invitée à limiter l'usage au labo ; un pilote demande "
+                "une sauvegarde externe chiffrée, un second hôte et une évaluation ML étendue. "
+                "La matrice rapproche NIS2 art. 20-21/23 et DORA art. 5-6/9/11-12/17-19/24-25/28-30 "
+                "des preuves et écarts. Ce rapprochement ne décide pas l'applicabilité des textes.",
                 "Les vérifications restantes sont explicites : essai depuis le deuxième PC "
                 "physique, contrôle du hotspot/pare-feu et de la confiance TLS, campagne ML "
-                "indépendante prolongée, PRA perte d'hôte, journal des contributions et vidéo "
+                "sur charges variées, PRA perte d'hôte, validation des travaux attribués et vidéo "
                 "continue de soixante secondes. La CI est définie dans le dépôt ; son exécution "
                 "distante n'est pas prouvée par une réussite locale.",
                 "[1] ANSSI, méthode EBIOS RM : https://cyber.gouv.fr/securisation/analyse-des-risques/"
                 "methode-ebios-rm/\n[2] Commission européenne, NIS2 : "
                 "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive\n"
                 "[3] EIOPA, DORA : https://www.eiopa.europa.eu/digital-operational-resilience-act-dora_en\n"
+                "Textes primaires : https://eur-lex.europa.eu/eli/dir/2022/2555/oj et "
+                "https://eur-lex.europa.eu/eli/reg/2022/2554/oj\n"
                 "Sources du besoin : sujet national EPSI BAC+5 2026 fourni par l'équipe, "
                 "sections 3 à 8, et présentation de workshop. Sources des résultats : "
                 "output/evidence/calibration.json, recovery.json et backup.json. Date : 19 octobre 2026.",

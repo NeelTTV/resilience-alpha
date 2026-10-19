@@ -11,21 +11,25 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 BASE = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8080").rstrip("/")
 address = urlsplit(BASE)
-connection = http.client.HTTPConnection(address.hostname, address.port or 80, timeout=15)
 
 
 def request(path, data=None, headers=None):
-    connection.request(
-        "POST" if data is not None else "GET",
-        path,
-        body=json.dumps(data).encode() if data is not None else None,
-        headers={"Content-Type": "application/json", **(headers or {})},
-    )
-    response = connection.getresponse()
-    body = response.read()
-    if response.status >= 400:
-        raise HTTPError(BASE + path, response.status, response.reason, response.headers, None)
-    return json.loads(body)
+    # Long recipes must not reuse a connection after the gateway's keep-alive limit.
+    connection = http.client.HTTPConnection(address.hostname, address.port or 80, timeout=15)
+    try:
+        connection.request(
+            "POST" if data is not None else "GET",
+            path,
+            body=json.dumps(data).encode() if data is not None else None,
+            headers={"Content-Type": "application/json", **(headers or {})},
+        )
+        response = connection.getresponse()
+        body = response.read()
+        if response.status >= 400:
+            raise HTTPError(BASE + path, response.status, response.reason, response.headers, None)
+        return json.loads(body)
+    finally:
+        connection.close()
 
 
 if __name__ == "__main__":

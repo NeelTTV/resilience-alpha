@@ -37,6 +37,18 @@ des certificats sur les postes ou réseaux tiers.
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1
 ```
 
+Recette d'installation isolée, sans réutiliser les secrets ou volumes existants :
+
+```powershell
+./.venv/Scripts/python.exe scripts/repro_check.py
+./.venv/Scripts/python.exe scripts/confirm_model.py --seconds 180
+```
+
+La première commande déploie par Ansible dans un projet Docker temporaire, vérifie
+un second passage sans changement et un paiement, puis supprime ce projet isolé.
+Son contrôleur temporaire accède au socket Docker pour le déploiement ; aucun
+service applicatif ne reçoit cet accès. Cela ne valide pas une autre machine physique.
+
 La recette écrit `output/evidence/recovery.json`, avec chronologie, score/version ML,
 statuts HTTP, transaction de preuve et contrôle de la transaction créée avant l'attaque.
 La reprise doit intervenir alors que le flux continue. Cette recette en conteneurs
@@ -156,7 +168,9 @@ les fichiers `.lock` et `apps/dashboard/package-lock.json`.
 - [Procédure de reprise](docs/runbook-recovery.md)
 - [Risques EBIOS, PCA/PRA et matrice NIS2/DORA](docs/governance.md)
 - [Conducteur démo et Clip Chrono](docs/demo-runbook.md)
-- [Contributions réelles à renseigner](docs/contributions.md)
+- [Travaux attribués par membre](docs/contributions.md)
+- [Conducteur de soutenance et questions](docs/soutenance.md)
+- [Recette sur deux PC et tournage](docs/recette-terrain.md)
 
 Le dossier PDF, la présentation et l'archive sont préparés dans
 `output/Workshop2026-M2-Equipe-DIVET/`. Aucun numéro de groupe n'est inventé.
@@ -165,6 +179,13 @@ génération PDF/PPTX sont optionnels ; ils utilisent ReportLab et le runtime Ar
 
 La CI définie teste le backend, le frontend, la calibration, la reprise et la restauration
 en conteneurs Linux. Son exécution distante n'est pas déduite des contrôles locaux.
-Restent à valider : matériel/réseau réel, campagne ML indépendante prolongée, PRA perte
-d'hôte, contributions individuelles et rendu vidéo. Le prototype ne revendique aucune
+Restent à valider pour la remise : matériel/réseau réel, maîtrise personnelle des
+travaux attribués, validation coach et rendu vidéo. Une campagne ML sur charges variées
+et un PRA perte d'hôte restent des renforcements du prototype. Il ne revendique aucune
 certification ni conformité réglementaire démontrée.
+
+Après génération des supports et du ZIP, `python scripts/delivery_check.py` vérifie
+les fichiers, l'intégrité et la concordance des sources, puis écrit `ETAT-DU-RENDU.txt`.
+Le mode `--strict` échoue tant que le rendu n'est pas complet. Après les vérifications
+réelles, renseigner `docs/acceptance.json` avec une référence de preuve pour chaque
+validation humaine ; ne pas cocher les validations avant leur exécution.

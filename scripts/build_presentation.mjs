@@ -86,7 +86,7 @@ page = slide('Équipe, risques et validation terrain',
   + 'do not claim individual contributions without their evidence. No regulatory compliance claim.');
 const roles = project.members.map(m => `${m.name} : ${m.role}`).join('\n');
 text(page, roles, 76, 198, 1120, 240, 28);
-text(page, 'Risques EBIOS, PCA/PRA et écarts NIS2/DORA documentés.\nÀ finaliser : essai sur deux PC, confiance TLS, contributions\net vidéo continue de 60 secondes.', 76, 510, 1120, 140, 27);
+text(page, 'Cible labo : RTO 30 s, RPO 0 sur la saturation.\nCoût hypothétique : 3 EUR/min + intervention ; hôte unique.\nÀ valider : deux PC, TLS, travaux attribués et Clip Chrono.', 76, 510, 1120, 140, 27);
 
 for (const [index, item] of presentation.slides.items.entries()) {
   const png = await presentation.export({ slide: item, format: 'png', scale: 1 });
@@ -108,6 +108,6 @@ const result = await finalizePresentation({
   requiredNativeTableOwnerSlides: [], requiredNativeChartOwnerSlides: [],
   fontPolicy: { basis: 'design', families: ['Arial'] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(temp, 'validation' + revision + '.json'),
+  receiptPath: path.join(temp, 'validation' + revision + '-' + Date.now() + '.json'),
 });
 console.log(JSON.stringify({ finalPath: path.join(output, project.delivery_slug + '-Pres' + revision + '.pptx') }));
