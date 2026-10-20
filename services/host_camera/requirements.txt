@@ -1,0 +1,4 @@
+# Separate Windows host environment; never replace the container ML environment.
+opencv-contrib-python==4.13.0.92
+fastapi==0.146.0
+uvicorn==0.37.0

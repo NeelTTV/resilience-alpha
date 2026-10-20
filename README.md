@@ -21,6 +21,10 @@ docker compose exec ollama ollama pull qwen3:0.6b
 
 Dashboard : **http://localhost:8080** ou **https://localhost:8443**.
 Compte `operator`, mot de passe local : `Get-Content .secrets/demo_password`.
+La connexion opérateur impose désormais le visage devant la caméra USB du PC hôte,
+puis le mot de passe et 30 s de voyant vert sur ESP8266. Préparer l'enrôlement,
+l'agent caméra Windows et le module avec la [consigne additionnelle](docs/additional-auth.md).
+Sans ce matériel configuré, le back-office refuse la connexion humaine.
 Le certificat TLS de laboratoire est dans `.secrets/tls_cert`. Établir sa confiance
 sur les postes autorisés avant d'utiliser HTTPS ; ne pas désactiver la validation
 des certificats sur les postes ou réseaux tiers.
@@ -61,6 +65,8 @@ La reprise doit intervenir alors que le flux continue. Cette recette en conteneu
 | waf | ModSecurity/OWASP CRS, entrée HTTP/TLS | 127.0.0.1:8080 et 8443 |
 | dashboard | React, TypeScript, Tailwind, proxy Nginx | Via le WAF |
 | auth | JWT RS256, comptes fictifs operator/recovery-check | Interne |
+| agent caméra Windows | Reconnaissance faciale sur caméra USB hôte, modèles locaux | HTTPS 8765, accès Docker uniquement |
+| ESP8266 | LED bicolore, CLion/PlatformIO, Wi-Fi du hotspot | Polling HTTPS authentifié via le WAF |
 | api | Paiements idempotents, PostgreSQL, admission/quarantaine | Interne |
 | supervisor | Collecte, SOC, modèle ML et automate de reprise | Lecture authentifiée via `/control/status` |
 | executor | Action Ansible unique, réseau control interne | Aucun port hôte |
@@ -177,8 +183,10 @@ Le dossier PDF, la présentation et l'archive sont préparés dans
 La vidéo continue doit être tournée sur les deux PC physiques. Les scripts de
 génération PDF/PPTX sont optionnels ; ils utilisent ReportLab et le runtime Artifact Tool.
 
-La CI définie teste le backend, le frontend, la calibration, la reprise et la restauration
-en conteneurs Linux. Son exécution distante n'est pas déduite des contrôles locaux.
+La CI définie teste le backend, le frontend, le paiement technique et la restauration
+en conteneurs Linux. Les tests d'authentification physique simulent caméra et ESP8266 ;
+la calibration et la reprise avec un compte humain exigent le matériel du labo.
+Son exécution distante n'est pas déduite des contrôles locaux.
 Restent à valider pour la remise : matériel/réseau réel, maîtrise personnelle des
 travaux attribués, validation coach et rendu vidéo. Une campagne ML sur charges variées
 et un PRA perte d'hôte restent des renforcements du prototype. Il ne revendique aucune

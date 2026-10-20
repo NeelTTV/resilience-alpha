@@ -15,7 +15,7 @@ def test_auth_rejects_wrong_credentials(clients):
                 "password": "wrong",
             },
         ).status_code
-        == 401
+        == 403
     )
 
 

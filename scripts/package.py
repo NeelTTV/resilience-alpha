@@ -22,7 +22,7 @@ ROOT_FILES = {
     "requirements-dev.in",
     "requirements-dev.lock",
 }
-EXCLUDED = {"node_modules", "dist", "__pycache__", ".pytest_cache", ".ruff_cache"}
+EXCLUDED = {"node_modules", "dist", "__pycache__", ".pytest_cache", ".ruff_cache", ".pio"}
 
 
 def package():
@@ -46,6 +46,8 @@ def package():
         relative = path.relative_to(ROOT)
         if path.is_symlink() or not path.is_file() or EXCLUDED.intersection(relative.parts):
             continue
+        if relative.as_posix() == "infra/esp8266/include/lab_config.h":
+            continue
         if relative.parts[0] in DIRECTORIES or relative.as_posix() in ROOT_FILES:
             entries.append((path, Path("resilience-alpha") / relative))
     for path in evidence.rglob("*"):
@@ -58,6 +60,9 @@ def package():
     # Match complete real secret values, never print their values on a failure.
     sensitive = []
     for name in [
+        "camera_key",
+        "camera_tls_key",
+        "device_key",
         "demo_password",
         "postgres_password",
         "grafana_password",

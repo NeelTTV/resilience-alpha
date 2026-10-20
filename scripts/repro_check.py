@@ -152,6 +152,8 @@ def main():
             "exec",
             "-e",
             "SMOKE_BASE_URL=http://waf:8080",
+            "-e",
+            "SMOKE_SERVICE_ACCOUNT=1",
             "-w",
             source,
             controller,

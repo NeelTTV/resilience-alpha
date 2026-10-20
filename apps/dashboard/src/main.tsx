@@ -2,13 +2,13 @@ import { StrictMode, useCallback, useEffect, useState, type FormEvent } from 're
 import { createRoot } from 'react-dom/client'
 import './style.css'
 import { Operations } from './Operations'
+import { Login } from './Login'
+import { Permissions } from './Permissions'
 
 type Transaction = { id: string; amount_cents: number; currency: string; status: string; created_at: string }
 
 function App() {
   const [token, setToken] = useState('')
-  const [username, setUsername] = useState('operator')
-  const [password, setPassword] = useState('')
   const [amount, setAmount] = useState('10.00')
   const [status, setStatus] = useState('Vérification…')
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -40,19 +40,6 @@ function App() {
     return () => clearInterval(interval)
   }, [refresh])
 
-  async function login(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setError('')
-    try {
-      const response = await fetch('/auth/token', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }), signal: AbortSignal.timeout(10000),
-      })
-      if (!response.ok) throw new Error('Connexion refusée ou service indisponible.')
-      setToken((await response.json()).access_token); setPassword('')
-    } catch (e) { setError((e as Error).message) }
-    finally { setBusy(false) }
-  }
-
   async function pay(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
     const cents = pending?.cents ?? Math.round(Number(amount) * 100)
@@ -80,17 +67,14 @@ function App() {
     <div className="my-8 border-y border-slate-700 py-5" role="status" aria-live="polite">{status}</div>
     <p className="mb-8 text-sm text-amber-200">Laboratoire de paiement fictif · scénario de saturation contrôlée.</p>
     {error && <p role="alert" className="mb-6 text-rose-300">{error}</p>}
-    {!token ? <form onSubmit={login} className="max-w-sm space-y-4">
-      <h2 className="text-xl font-semibold">Connexion opérateur</h2>
-      <label className="block">Identifiant<input autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} required /></label>
-      <label className="block">Mot de passe<input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required /></label>
-      <button disabled={busy}>{busy ? 'Connexion…' : 'Se connecter'}</button>
-    </form> : <>
+    {!token ? <Login onLogin={setToken} /> : <>
+      <button className="mb-6" onClick={() => { setToken(''); setTransactions([]) }}>Se déconnecter</button>
       <form onSubmit={pay} className="flex max-w-xl flex-wrap items-end gap-4">
         <label className="grow">Montant fictif (€)<input type="number" min="0.01" max="1000000" step="0.01" value={amount} disabled={!!pending} onChange={e => setAmount(e.target.value)} required /></label>
         <button disabled={busy}>{busy ? 'Traitement…' : pending ? 'Réessayer le paiement' : 'Créer un paiement'}</button>
       </form>
       <Operations token={token} />
+      <Permissions token={token} />
       <h2 className="mb-4 mt-12 text-xl font-semibold">Transactions récentes</h2>
       <div className="overflow-x-auto"><table className="w-full text-left text-sm">
         <caption className="sr-only">100 dernières transactions de votre compte</caption>

@@ -29,6 +29,8 @@ def create(name, value):
 create("postgres_password", secrets.token_urlsafe(32))
 create("grafana_password", secrets.token_urlsafe(24))
 create("remediation_key", secrets.token_urlsafe(48))
+create("camera_key", secrets.token_urlsafe(48))
+create("device_key", secrets.token_urlsafe(48))
 create("recovery_password", secrets.token_urlsafe(24))
 create("demo_password", secrets.token_urlsafe(18))
 password = (directory / "demo_password").read_text().strip()
@@ -107,6 +109,37 @@ if not (directory / "tls_key").exists():
         .strip(),
     )
     create("tls_cert", certificate.public_bytes(serialization.Encoding.PEM).decode().strip())
+if not (directory / "camera_tls_key").exists():
+    camera_tls = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Host USB Camera")])
+    now = datetime.now(timezone.utc)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(subject)
+        .public_key(camera_tls.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=90))
+        .add_extension(
+            x509.SubjectAlternativeName(
+                [x509.DNSName("host.docker.internal"), x509.DNSName("localhost")]
+            ),
+            critical=False,
+        )
+        .sign(camera_tls, hashes.SHA256())
+    )
+    create(
+        "camera_tls_key",
+        camera_tls.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+        .decode()
+        .strip(),
+    )
+    create("camera_cert", cert.public_bytes(serialization.Encoding.PEM).decode().strip())
 if not (ROOT / ".env").exists():
     shutil.copyfile(ROOT / ".env.example", ROOT / ".env")
 environment_path = ROOT / ".env"

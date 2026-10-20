@@ -18,6 +18,9 @@ def status(path, **kwargs):
 
 if __name__ == "__main__":
     results = {
+        "physical_auth_management_not_public": status("/auth/users") == 401,
+        "esp_status_requires_device_key": status("/auth/device/status") == 401,
+        "auth_introspection_not_published": status("/auth/introspect") == 404,
         "unauthenticated_payment_denied": status("/api/transactions") == 401,
         "internal_api_not_published": status("/api/metrics") == 404,
         "internal_control_not_published": status("/control/quarantine") == 404,

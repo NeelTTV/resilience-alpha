@@ -1,5 +1,11 @@
 # Architecture livrée
 
+Ajout : [caméra USB du PC hôte et ESP8266](additional-auth.md). Auth orchestre le
+parcours visage puis mot de passe et conserve habilitations/blocage dans le volume
+`auth_data`. Un agent Windows HTTPS utilise la caméra USB locale ; l'ESP8266
+interroge le WAF avec une clé distincte. Les modèles faciaux restent sur l'hôte.
+Les services vérifient les habilitations auprès d'Auth pour révoquer les accès.
+
 Client -> WAF ModSecurity/OWASP CRS -> Nginx/React -> auth ou API -> PostgreSQL.
 Seul le WAF publie les ports applicatifs HTTP/TLS. Il écrase l'identité source reçue.
 JWT RS256 de 15 min : clé privée dans auth, clé publique dans les services lecteurs.

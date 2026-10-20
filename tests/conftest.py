@@ -25,6 +25,9 @@ os.environ["JWT_PUBLIC_KEY"] = (
     .decode()
 )
 os.environ["SUPERVISOR_STATE"] = str(Path(TEST_DIR.name) / "supervisor")
+os.environ["AUTH_STATE"] = str(Path(TEST_DIR.name) / "auth.db")
+os.environ["CAMERA_KEY"] = "test-camera-key"
+os.environ["DEVICE_KEY"] = "test-device-key"
 os.environ["REMEDIATION_KEY"] = "test-only-executor-key"
 salt = bytes.fromhex("0123456789abcdef0123456789abcdef")
 os.environ["DEMO_PASSWORD_HASH"] = (
@@ -47,19 +50,22 @@ from services.payment.main import Base, app, engine  # noqa: E402
 
 @pytest.fixture
 def clients():
+    from services.auth.physical import database
+
+    with database() as db:
+        db.execute("DELETE FROM sessions")
+        db.execute("DELETE FROM users")
+        db.execute("UPDATE kiosk SET failures=0,blocked_until=0")
     Base.metadata.drop_all(engine)
     with TestClient(auth_app) as auth, TestClient(app) as api:
+        with database() as db:
+            db.execute("UPDATE users SET enrolled=1 WHERE username='operator'")
         yield auth, api
 
 
 @pytest.fixture
 def headers(clients):
-    auth, _ = clients
-    token = auth.post(
-        "/token",
-        json={
-            "username": "operator",
-            "password": "test-password",
-        },
-    ).json()["access_token"]
+    from services.auth.main import issue
+
+    token = issue("operator", "admin")["access_token"]
     return {"Authorization": f"Bearer {token}", "Idempotency-Key": "payment-1"}

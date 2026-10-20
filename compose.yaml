@@ -43,8 +43,15 @@ services:
       RECOVERY_PASSWORD_HASH_FILE: /run/secrets/recovery_password_hash
       DEMO_USERNAME: ${DEMO_USERNAME:-operator}
       LOG_DIR: /logs
-    secrets: [jwt_private_key, demo_password_hash, recovery_password_hash]
-    volumes: [app_logs:/logs]
+      JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+      CAMERA_KEY_FILE: /run/secrets/camera_key
+      DEVICE_KEY_FILE: /run/secrets/device_key
+      CAMERA_URL: https://host.docker.internal:8765
+      CAMERA_CERT_FILE: /run/secrets/camera_cert
+      AUTH_STATE: /state/auth.db
+    extra_hosts: ['host.docker.internal:host-gateway']
+    secrets: [jwt_private_key, jwt_public_key, demo_password_hash, recovery_password_hash, camera_key, camera_cert, device_key]
+    volumes: [app_logs:/logs, auth_data:/state]
 
   api:
     <<: *python
@@ -54,6 +61,7 @@ services:
       LOG_DIR: /logs
       LAB_CAPACITY_ENABLED: ${LAB_CAPACITY_ENABLED:-true}
       CAPACITY_RPS: '20'
+      AUTH_INTROSPECTION_URL: http://auth:8000/introspect
     secrets: [jwt_public_key, postgres_password]
     volumes: [app_logs:/logs, quarantine_policy:/policy:ro]
     depends_on:
@@ -115,6 +123,7 @@ services:
       JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
       REMEDIATION_KEY_FILE: /run/secrets/remediation_key
       RECOVERY_PASSWORD_FILE: /run/secrets/recovery_password
+      AUTH_INTROSPECTION_URL: http://auth:8000/introspect
     secrets: [jwt_public_key, remediation_key, recovery_password]
     volumes:
       - supervisor_data:/state
@@ -142,6 +151,7 @@ services:
     environment:
       JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:0.6b}
+      AUTH_INTROSPECTION_URL: http://auth:8000/introspect
     secrets: [jwt_public_key]
     volumes: [./docs:/app/docs:ro]
 
@@ -207,6 +217,7 @@ volumes:
   waf_logs:
   quarantine_policy:
   supervisor_data:
+  auth_data:
 
 secrets:
   postgres_password: {file: ./.secrets/postgres_password}
@@ -219,4 +230,7 @@ secrets:
   remediation_key: {file: ./.secrets/remediation_key}
   tls_cert: {file: ./.secrets/tls_cert}
   tls_key: {file: ./.secrets/tls_key}
+  camera_key: {file: ./.secrets/camera_key}
+  device_key: {file: ./.secrets/device_key}
+  camera_cert: {file: ./.secrets/camera_cert}
 

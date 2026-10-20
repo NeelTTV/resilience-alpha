@@ -1,5 +1,8 @@
 .git
 .venv
+.camera-venv
+**/.pio
+infra/esp8266/include/lab_config.h
 .secrets
 .env
 **/node_modules

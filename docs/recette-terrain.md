@@ -1,5 +1,9 @@
 # Recette sur deux PC et contrôle du rendu
 
+Inclure la [recette caméra USB hôte / ESP8266](additional-auth.md) et conserver ses
+preuves séparées des tests simulés. Renseigner `physical_auth` et `esp8266` dans
+`acceptance.json` uniquement après vérification sur le matériel réel.
+
 Statut initial : NON RÉALISÉE. Ce document est la procédure préparée pour l'équipe.
 Le client Docker des essais automatisés n'est pas un second ordinateur physique.
 

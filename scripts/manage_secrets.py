@@ -17,6 +17,10 @@ TOOLS = ROOT / ".tools"
 SECRET_DIR = ROOT / ".secrets"
 BUNDLE = ROOT / "security/secrets.enc.json"
 NAMES = [
+    "camera_key",
+    "camera_cert",
+    "camera_tls_key",
+    "device_key",
     "postgres_password",
     "grafana_password",
     "jwt_private_key",

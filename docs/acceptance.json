@@ -1,4 +1,6 @@
 {
+  "physical_auth": {"validated": false, "evidence": "", "label": "Caméra USB du PC hôte, reconnaissance faciale, habilitations et blocage persistant"},
+  "esp8266": {"validated": false, "evidence": "", "label": "ESP8266 sur hotspot, CLion/PlatformIO, LED et durées réelles 30 s / 10 clignotements"},
   "physical_lab": {"validated": false, "evidence": "", "label": "Recette sur deux PC, hotspot, pare-feu et confiance TLS"},
   "team": {"validated": false, "evidence": "", "label": "Validation personnelle des travaux attribués et répétition"},
   "coach": {"validated": false, "evidence": "", "label": "Validation architecture et EBIOS par le coach"},

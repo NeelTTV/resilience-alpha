@@ -1,5 +1,10 @@
 # Démonstration et Clip Chrono
 
+Prérequis additionnel : installer l'[authentification physique](additional-auth.md),
+enrôler l'administrateur et connecter l'ESP8266. Effectuer la connexion et ses 30 s
+de voyant vert pendant la préparation hors capture. Les recettes opérateur
+demandent la présence devant la caméra USB du PC hôte.
+
 ## Préparation hors capture
 
 Sur le PC Hôte, démarrer Docker, `docker compose --profile ai up --build -d --wait`,

@@ -11,11 +11,13 @@ const path = require('node:path');
   try {
     await page.goto('http://127.0.0.1:8080');
     await page.getByLabel('Identifiant', { exact: true }).fill('operator');
+    await page.getByRole('button', { name: 'Vérifier mon visage', exact: true }).click();
+    await page.getByLabel('Mot de passe', { exact: true }).waitFor({ timeout: 45000 });
     await page.getByLabel('Mot de passe', { exact: true }).fill(
       fs.readFileSync(path.join(process.cwd(), '.secrets/demo_password'), 'utf8').trim(),
     );
-    await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
-    await page.getByRole('heading', { name: 'Supervision et reprise autonome' }).waitFor();
+    await page.getByRole('button', { name: 'Valider le mot de passe', exact: true }).click();
+    await page.getByRole('heading', { name: 'Supervision et reprise autonome' }).waitFor({ timeout: 45000 });
     await page.getByText('Service rétabli et paiement vérifié', { exact: true }).first().waitFor();
     fs.mkdirSync('output/evidence', { recursive: true });
     await page.screenshot({ path: 'output/evidence/dashboard.png', fullPage: true });

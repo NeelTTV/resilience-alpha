@@ -1,4 +1,8 @@
-log_format lab_json escape=json '{"timestamp":$msec,"service":"waf","client_ip":"$remote_addr","status":$status,"duration_seconds":$request_time,"route":"$uri","method":"$request_method"}';
+map $uri $lab_route {
+    default $uri;
+    ~^/auth/session/ /auth/session/redacted;
+}
+log_format lab_json escape=json '{"timestamp":$msec,"service":"waf","client_ip":"$remote_addr","status":$status,"duration_seconds":$request_time,"route":"$lab_route","method":"$request_method"}';
 access_log /logs/waf.jsonl lab_json;
 
 server {

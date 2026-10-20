@@ -2,6 +2,10 @@
 .env.*
 !.env.example
 .venv/
+.camera-venv/
+.pio/
+infra/esp8266/include/lab_config.h
+.secrets/
 node_modules/
 dist/
 __pycache__/
