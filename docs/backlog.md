@@ -8,8 +8,8 @@
 | CYBER | WAF, SOC, flux offensif borné, SOPS/age, quarantaine | Second PC physique, pare-feu et confiance TLS |
 | TRANSFORMATION | EBIOS, coûts hypothétiques, PCA/PRA, matrice NIS2/DORA, travaux attribués, supports et conducteur | Validation par équipe/coachs, maîtrise individuelle et vidéo |
 
-Les preuves mesurées sont dans `output/evidence/`. Le nom provisoire des livrables
-est `Workshop2026-M2-Equipe-DIVET`. Aucun numéro de groupe n'a été inventé.
+Les preuves mesurées sont dans `output/evidence/`. Le nom des livrables
+est `Workshop2026-M2-Groupe-3`.
 La vidéo continue doit être réalisée selon `demo-runbook.md` sur deux PC physiques.
 Une présence de code ne constitue pas une preuve de validation matérielle.
 

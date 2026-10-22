@@ -1,6 +1,6 @@
 # Resilience Alpha
 
-Démonstrateur de cyber-résilience EPSI M2 2026, **Équipe DIVET**.
+Démonstrateur de cyber-résilience EPSI M2 2026, **Groupe 3**.
 Paiements et données entièrement fictifs, sans banque ni prestataire externe.
 
 La chaîne implémentée relie WAF, API de paiement, collecte de journaux, détection ML,
@@ -179,7 +179,7 @@ les fichiers `.lock` et `apps/dashboard/package-lock.json`.
 - [Recette sur deux PC et tournage](docs/recette-terrain.md)
 
 Le dossier PDF, la présentation et l'archive sont préparés dans
-`output/Workshop2026-M2-Equipe-DIVET/`. Aucun numéro de groupe n'est inventé.
+`output/Workshop2026-M2-Groupe-3/`.
 La vidéo continue doit être tournée sur les deux PC physiques. Les scripts de
 génération PDF/PPTX sont optionnels ; ils utilisent ReportLab et le runtime Artifact Tool.
 

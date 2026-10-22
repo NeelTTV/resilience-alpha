@@ -3,7 +3,7 @@
 Implémentation de la consigne fournie dans « WorkShop 2026-27 M2 - Consigne
 Additionnelle.pdf ». La caméra utilisée est celle branchée en USB au **PC hôte
 Windows**, qui héberge Docker et le hotspot `RESILIENCE-G<n>`. Aucune webcam du
-navigateur ou du second PC n'est utilisée. Le numéro de groupe n'est pas inventé.
+navigateur ou du second PC n'est utilisée. Le numéro de groupe est 3.
 
 ## Parcours livré
 

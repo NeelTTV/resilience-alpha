@@ -12,5 +12,5 @@ Répartition définie à la demande de l'équipe. Elle ne constitue pas une atte
 des contributions déjà réalisées. Chacun tient un journal dans `docs/contributions.md`
 et doit pouvoir expliquer le code livré, y compris les parties générées avec l'IA.
 
-Aucun numéro de groupe n'a été fourni. Les livrables utilisent provisoirement
-`Workshop2026-M2-Equipe-DIVET` ; appliquer le nom officiel lorsque le campus l'attribue.
+Le numéro de groupe est 3. Les livrables utilisent
+`Workshop2026-M2-Groupe-3`.

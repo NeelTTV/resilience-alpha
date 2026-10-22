@@ -10,7 +10,7 @@ Le client Docker des essais automatisés n'est pas un second ordinateur physique
 ## Réseau - Josselin et Maxime
 
 - [ ] Activer le point d'accès mobile Windows du PC Hôte sur le seul réseau du groupe.
-- [ ] Faire valider le nom provisoire RESILIENCE-Equipe-DIVET en l'absence de numéro.
+- [ ] Faire valider le nom du réseau RESILIENCE-Groupe-3.
 - [ ] Connecter le PC Attaquant et relever les IP distinctes des deux postes.
 - [ ] Dans `.env`, choisir l'IP du hotspot pour BIND_ADDRESS et limiter LAB_CIDRS au labo.
 - [ ] Publier uniquement 8080/8443 vers le hotspot ; garder DB, administration et métriques internes/locales.

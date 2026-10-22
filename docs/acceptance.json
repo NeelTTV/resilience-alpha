@@ -5,5 +5,5 @@
   "team": {"validated": false, "evidence": "", "label": "Validation personnelle des travaux attribués et répétition"},
   "coach": {"validated": false, "evidence": "", "label": "Validation architecture et EBIOS par le coach"},
   "video": {"validated": false, "evidence": "", "label": "Clip Chrono continu <= 60 s avec preuve métier"},
-  "naming": {"validated": false, "evidence": "", "label": "Dénomination Équipe DIVET sans numéro acceptée par le campus"}
+  "naming": {"validated": false, "evidence": "", "label": "Dénomination Groupe 3 acceptée par le campus"}
 }

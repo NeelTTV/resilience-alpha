@@ -95,7 +95,7 @@ def package():
         if bundle.testzip() is not None:
             raise RuntimeError("ZIP integrity test failed")
     (output / "README-RENDU.txt").write_text(
-        "Équipe DIVET - Aucun numéro de groupe fourni.\n"
+        "Groupe 3.\n"
         "Dossier PDF et présentation PPTX : résultats de recette locale en conteneurs.\n"
         "Code ZIP : sources, déploiement, modèle/provenance et preuves ; aucun secret en clair.\n"
         "La clé age privée n'est pas incluse. Le setup peut générer de nouveaux secrets.\n"

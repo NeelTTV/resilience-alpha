@@ -47,7 +47,7 @@ let page = slide('RESILIENCE-ALPHA',
   'Ethan: I am Ethan DIVET, responsible for development. Present the fictitious payment path. '
   + 'Source: repository, docs/team.md and supplied EPSI workshop subject. No real financial data.');
 text(page, 'Reprise autonome\nd’un paiement fictif', 76, 232, 1120, 180, 58, true);
-text(page, 'Équipe DIVET · EPSI M2 · 19 octobre 2026', 76, 494, 1120, 56, 27);
+text(page, 'Groupe 3 · EPSI M2 · 19 octobre 2026', 76, 494, 1120, 56, 27);
 text(page, 'Recette locale en conteneurs. Essai sur deux PC physiques à finaliser.', 76, 610, 1120, 52, 23);
 
 page = slide('Architecture du démonstrateur',

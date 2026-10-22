@@ -1,8 +1,8 @@
 {
   "name": "Resilience Alpha",
-  "team_label": "Équipe DIVET",
-  "delivery_slug": "Workshop2026-M2-Equipe-DIVET",
-  "group_number": null,
+  "team_label": "Groupe 3",
+  "delivery_slug": "Workshop2026-M2-Groupe-3",
+  "group_number": 3,
   "roles_status": "Répartition choisie pour le projet ; contributions réalisées à consigner séparément.",
   "members": [
     { "name": "Ethan DIVET", "role": "DEV", "responsibility": "API, authentification, dashboard et intégration métier" },

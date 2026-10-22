@@ -79,7 +79,7 @@ def build():
                 "attaque/WAF/secrets/privilèges ; Jean-christophe, risques/continuité/supports. "
                 "Préparation avec l'aide de Codex ; cette répartition ne prouve pas un auteur "
                 "individuel ou une recette personnelle. Les validations sont tracées dans "
-                "docs/contributions.md. Sans numéro fourni, le nom provisoire reste Équipe DIVET.",
+                "docs/contributions.md. Le numéro de groupe est 3.",
             ],
         ),
         (
@@ -346,7 +346,7 @@ def build():
     def footer(canvas, document):
         canvas.setFont("Body", 8)
         canvas.setFillColor(colors.HexColor("#64748B"))
-        canvas.drawString(52, 30, "Équipe DIVET · Démonstrateur fictif · Validation locale")
+        canvas.drawString(52, 30, "Groupe 3 · Démonstrateur fictif · Validation locale")
         canvas.drawRightString(A4[0] - 52, 30, str(document.page))
 
     SimpleDocTemplate(
@@ -357,7 +357,7 @@ def build():
         topMargin=48,
         bottomMargin=52,
         title="Resilience Alpha - Dossier d'ingénierie et de gouvernance",
-        author="Équipe DIVET",
+        author="Groupe 3",
     ).build(story, onFirstPage=footer, onLaterPages=footer)
     (output / (project["delivery_slug"] + "-Dossier.md")).write_text(
         "\n".join(markdown),

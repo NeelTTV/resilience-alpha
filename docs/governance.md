@@ -2,7 +2,7 @@
 
 ## Périmètre et responsabilités
 
-Équipe DIVET : responsabilités dans `team.md`. Numéro de groupe non attribué.
+Groupe 3 : responsabilités dans `team.md`.
 Actif métier principal : disponibilité et cohérence des paiements fictifs.
 Flux et accès : `architecture.md`, `compose.yaml` et README. Les signatures sont
 RS256 ; seul auth possède la clé privée. L'exécuteur Ansible est opérationnel,
