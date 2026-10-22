@@ -141,6 +141,9 @@ def build():
                 "Les observations viennent de requêtes HTTP réellement exécutées dans ce labo, "
                 "sur une période normale distincte de l'attaque. Les fenêtres non vides sont "
                 "agrégées par source sur trois secondes.",
+                "Le OneClassSVM est retenu pour apprendre le comportement normal sans exiger "
+                "un corpus d'attaques étiquetées, avec un coût adapté au CPU du laboratoire. "
+                "Ce choix rend la calibration représentative indispensable. "
                 "Les variables sont le logarithme du débit, la proportion de réponses en erreur, "
                 "la latence moyenne et la proportion de refus 401. Un centrage sans amplification "
                 "de la faible variance de latence précède "
@@ -254,16 +257,25 @@ def build():
                 f"{backup['restore_seconds']} secondes sur ce poste. Le test compare le nombre "
                 "de transactions et l'empreinte de leur contenu trié. Il supprime uniquement "
                 "sa base temporaire et n'écrase pas le métier. Les copies sont locales ; un "
-                "PRA perte d'hôte demande une copie externe et un exercice sur un autre poste.",
+                "PRA perte d'hôte demande une copie externe et un exercice sur un autre poste. "
+                "Politique proposée avant pilote : copie externe chiffrée toutes les 15 minutes, "
+                "rétention sept jours, contrôle quotidien et exercice mensuel. Ce dispositif "
+                "n'est pas déployé ; son RPO cible de 15 minutes reste à mesurer.",
                 "Les secrets sont générés aléatoirement, ignorés par Git et montés seulement "
                 "dans les services qui les utilisent. SOPS/age chiffre le bundle partageable, "
                 "contrôlé par un déchiffrement identique. La clé age privée reste hors archive. "
                 "Le workflow refuse d'écraser des identifiants locaux différents sans traitement "
                 "explicite. Les permissions Unix et les ACL Windows doivent être adaptées au poste.",
+                "PCA : maintenir la base et isoler la source pendant la saturation. Si l'automate "
+                "échoue, Josselin et Ethan conservent failed et les journaux, puis diagnostiquent "
+                "hors démonstration. PRA données : arrêter les écritures, conserver la base "
+                "endommagée, restaurer dans une base distincte, comparer empreintes et comptages, "
+                "puis faire approuver le basculement. Une perte d'hôte exige aussi redéploiement, "
+                "récupération des secrets et procédure privée pour les habilitations/biométries.",
                 "Le WAF est verrouillé par digest et l'application offre TLS avec certificat "
                 "de laboratoire. Le groupe doit établir la confiance du certificat et filtrer "
                 "le hotspot avant usage. Les services internes ne publient pas de port réseau. "
-                "Les limites restent les comptes partagés, l'absence de révocation/MFA, la "
+                "Les limites restent le compte technique partagé, la biométrie sans anti-photo, la "
                 "concentration sur un hôte et l'absence d'audit indépendant des images.",
             ],
         ),
@@ -280,7 +292,12 @@ def build():
                 "réglementaire, gouvernance d'une entité financière réelle, surveillance des tiers, "
                 "programme de tests représentatif ou certification. Une matrice d'écarts relie "
                 "ces thèmes aux composants et preuves dans docs/governance.md.",
-                "La direction fictive est invitée à limiter l'usage au labo ; un pilote demande "
+                "Choix de gouvernance proposés : usage limité au laboratoire ; Josselin réserve "
+                "une demi-journée à la recette réseau, Lucas une journée à l'évaluation ML. "
+                "Jean-christophe suit le registre des écarts ; le coach et l'équipe restent "
+                "décideurs de leur validation. Revoir les risques après changement du modèle, "
+                "du réseau ou des privilèges. Ces budgets de temps ne sont pas des travaux attestés. "
+                "Un pilote demande "
                 "une sauvegarde externe chiffrée, un second hôte et une évaluation ML étendue. "
                 "La matrice rapproche NIS2 art. 20-21/23 et DORA art. 5-6/9/11-12/17-19/24-25/28-30 "
                 "des preuves et écarts. Ce rapprochement ne décide pas l'applicabilité des textes.",
@@ -293,14 +310,126 @@ def build():
                 "methode-ebios-rm/\n[2] Commission européenne, NIS2 : "
                 "https://digital-strategy.ec.europa.eu/en/policies/nis2-directive\n"
                 "[3] EIOPA, DORA : https://www.eiopa.europa.eu/digital-operational-resilience-act-dora_en\n"
-                "Textes primaires : https://eur-lex.europa.eu/eli/dir/2022/2555/oj et "
-                "https://eur-lex.europa.eu/eli/reg/2022/2554/oj\n"
-                "Sources du besoin : sujet national EPSI BAC+5 2026 fourni par l'équipe, "
-                "sections 3 à 8, et présentation de workshop. Sources des résultats : "
-                "output/evidence/calibration.json, recovery.json et backup.json. Date : 19 octobre 2026.",
+                "Identifiants des textes : directive (UE) 2022/2555 et règlement (UE) 2022/2554. "
+                "Pages ANSSI, Commission et EIOPA consultées le 22 octobre 2026.\n"
+                "Sources du besoin : consigne de dossier transmise dans la conversation. "
+                "Sources techniques : README.md, compose.yaml, services/, docs/additional-auth.md, "
+                "docs/governance.md et docs/contributions.md. Sources des résultats : "
+                "output/evidence/calibration.json, recovery.json, model-evaluation.json, backup.json, "
+                "reproducibility.json et security.json. Les preuves antérieures ne valent pas "
+                "nouvelle recette de l'intégration matérielle du 20 octobre.",
             ],
         ),
     ]
+    chapters.insert(2, (
+        "3. Authentification physique et habilitations",
+        [
+            "Évolution intégrée au dossier du 22 octobre : la connexion humaine impose le visage "
+            "devant la caméra USB du PC hôte Windows, puis le mot de passe. Auth pilote le parcours ; "
+            "l'agent caméra HTTPS local reconnaît le visage ; l'ESP8266 interroge le WAF et affiche "
+            "les états sur une LED bicolore. Le navigateur du second PC n'utilise pas sa webcam. "
+            "Ce choix centralise l'enrôlement, au prix d'une présence physique obligatoire et d'une "
+            "dépendance à la caméra, au Wi-Fi et au module.",
+            "Après reconnaissance (cinq observations consécutives), le vert clignote et le mot de "
+            "passe peut être saisi pendant 90 s. Visage refusé : rouge fixe 30 s. Mot de passe "
+            "incorrect : dix clignotements rouges à 1 Hz. Mot de passe correct : vert fixe 30 s, "
+            "puis seulement délivrance du JWT et ouverture du back-office. Deux échecs complets "
+            "déclenchent un blocage global de cinq minutes, persistant dans SQLite. Les challenges "
+            "sont aléatoires, liés au compte, expirables et consommés une seule fois.",
+            "Les mots de passe sont hachés avec scrypt. Les clés caméra et ESP8266 sont distinctes ; "
+            "le module vérifie l'empreinte TLS du WAF. "
+            "Les habilitations admin/operator sont persistées dans auth_data. L'administrateur "
+            "peut créer, enrôler, désactiver et supprimer les comptes ; une modification invalide "
+            "leurs anciens jetons. API, SOC et RAG vérifient l'état courant auprès d'Auth ; une "
+            "indisponibilité de cette vérification ferme l'accès. Cette révocation est présente "
+            "dans le code actuel, même si certains anciens documents décrivent encore le socle antérieur.",
+            "Le compte technique recovery-check demeure distinct du parcours humain. Ses droits "
+            "sont limités aux transactions fictives de preuve ; il ne donne accès ni au SOC, ni au "
+            "RAG, ni à l'administration. Ce choix permet une vérification automatique du métier, "
+            "tout en faisant de son secret une dépendance de la reprise.",
+            "OpenCV Haar/LBPH fonctionne sur CPU sans cloud. Le seuil de distance 55 doit être "
+            "calibré ; ce n'est pas un taux de confiance. Aucune protection contre présentation "
+            "d'une photo ou vidéo n'est démontrée. Modèles faciaux locaux, exclus de Git et de "
+            "l'archive ; ACL, conservation et suppression sont à organiser avec les participants. "
+            "Le dump PostgreSQL ne sauvegarde ni ces modèles ni les habilitations SQLite.",
+            "Les automates peuvent être testés avec des périphériques simulés. L'enrôlement réel, "
+            "la caméra USB, l'ESP8266 et les durées lumineuses ne sont pas validés dans "
+            "docs/acceptance.json. Aucun taux d'erreur biométrique ni essai matériel réussi "
+            "n'est déduit des preuves antérieures. Source : docs/additional-auth.md et "
+            "services/common/security.py.",
+        ],
+    ))
+    chapters.insert(6, (
+        "7. Résultats des essais et portée des preuves",
+        [
+            "Cette synthèse exploite les fichiers de preuve déjà présents, sans relancer une "
+            "attaque ni une recette matérielle pour produire le dossier. La campagne de reprise "
+            "est datée du 19 octobre 2026 ; elle précède l'ajout de l'authentification physique. "
+            "Elle valide le scénario testé et demande une nouvelle recette de bout en bout après intégration.",
+            f"Reprise : {duration} s entre detected et recovered, cinq réponses HTTP 503 observées "
+            "par les sondes métier, nouvelle transaction conservée et transaction antérieure "
+            "préservée. L'attaque était encore active à la reprise. Le client offensif a reçu "
+            "87 réponses 401, 153 réponses 503 et 2 210 réponses 403. Ces 153 refus ne sont pas "
+            "les cinq refus mesurés par les sondes légitimes.",
+            f"ML : {calibration['train_windows']} fenêtres d'apprentissage et "
+            f"{calibration['validation_windows']} de validation. Confirmation sans réentraînement : "
+            f"{evaluation['true_positive']}/{evaluation['attack_windows']} fenêtres d'attaque détectées, "
+            f"{evaluation['false_positive_on_assumed_quiet']}/{evaluation['quiet_windows']} fausses "
+            "alertes sur le trafic présumé normal. Fenêtres corrélées et scénario unique : "
+            "aucune généralisation à une charge de production.",
+            f"Sauvegarde : {backup['live']['transactions']} transactions restaurées en "
+            f"{backup['restore_seconds']} s dans une base neuve ; comptage et SHA256 identiques. "
+            "Le temps mesuré est celui de la restauration locale d'un petit jeu de données, "
+            "pas le délai d'un PRA complet avec redéploiement et basculement.",
+            "Reproductibilité : projet Docker isolé, secrets et volumes neufs, cinq contrôles "
+            "positifs (secrets, déploiement, idempotence, métier, accès hôte). Durée globale "
+            "208,66 s. Second passage Ansible sans changement. Le même moteur Docker a été utilisé ; "
+            "le fichier conserve les empreintes de l'instantané testé, qui n'est pas une "
+            "certification de toutes les évolutions actuelles.",
+            "Sécurité : security.json rapporte huit contrôles positifs, dont refus de paiement "
+            "anonyme, non-publication des API internes, blocage d'une sonde SQL par le WAF, "
+            "vérification du certificat/nom TLS et protection des points d'accès physiques. "
+            "Ces contrôles ciblés ne constituent pas un audit exhaustif. Le contrôle navigateur "
+            "enregistré rapporte login, incidents et réponse RAG sans erreur ; il ne prouve "
+            "pas le nouveau parcours physique.",
+        ],
+    ))
+    chapters.append((
+        "12. Contributions et validations de remise",
+        [
+            "La contribution attendue de chacun est rendue visible ci-dessous avec ses "
+            "livrables vérifiables. Le journal du dépôt précise que le socle, les scripts et "
+            "les supports ont été préparés avec l'aide de Codex. Les rôles sont attribués ; "
+            "aucune preuve disponible ne permet de certifier un auteur individuel ou une "
+            "manipulation personnelle. La validation de chaque membre reste à consigner.",
+            "Ethan DIVET - DEV : API de paiement et idempotence, authentification RS256, "
+            "dashboard et intégration. Livrables : services/payment/, services/auth/, "
+            "apps/dashboard/, tests/. Preuves communes : recovery.json et browser.json. "
+            "Validation personnelle : à confirmer par Ethan.",
+            "Josselin LENAOUR - INFRA : Docker Compose, Ansible, réseaux, observabilité et "
+            "sauvegarde/restauration. Livrables : compose.yaml, infra/, scripts/repro_check.py "
+            "et backup_check.py. Preuves communes : reproducibility.json et backup.json. "
+            "Validation personnelle : à confirmer par Josselin.",
+            "Lucas CHEVALIER - IA/DATA : collecte, calibration OneClassSVM, évaluation et "
+            "RAG local. Livrables : services/supervisor/, services/assistant/, scripts/calibrate.py, "
+            "confirm_model.py et docs/model-card.md. Preuves communes : calibration.json et "
+            "model-evaluation.json. Validation personnelle : à confirmer par Lucas.",
+            "Maxime DUSSORT - CYBER : attaque bornée, WAF/SOC, secrets et privilèges de reprise. "
+            "Livrables : security/, services/executor/, scripts/security_check.py. Preuve commune : "
+            "security.json. Validation personnelle : à confirmer par Maxime.",
+            "Jean-christophe MALINUR - TRANSFORMATION : analyse de risques, impact métier, "
+            "PCA/PRA, rapprochement NIS2/DORA et recommandations. Livrables : docs/governance.md, "
+            "docs/soutenance.md et dossier. Validation personnelle : à confirmer par Jean-christophe.",
+            "Au 22 octobre, les sept validations de docs/acceptance.json sont non renseignées : "
+            "authentification physique, ESP8266, laboratoire sur deux PC, maîtrise personnelle, "
+            "coach, Clip Chrono et acceptation de la dénomination. Pour clore chacune, enregistrer "
+            "date, vérificateur, résultat et référence de preuve après exécution. La génération "
+            "de ce PDF ne modifie pas ces validations.",
+        ],
+    ))
+    # Keep the numbering stable when chapters are inserted above.
+    chapters = [(f"{i + 1}. {title.split('. ', 1)[1]}", paragraphs)
+                for i, (title, paragraphs) in enumerate(chapters)]
     output = ROOT / "output" / project["delivery_slug"]
     output.mkdir(parents=True, exist_ok=True)
     pdf = output / (project["delivery_slug"] + "-Dossier.pdf")
@@ -312,13 +441,51 @@ def build():
         story.append(Paragraph(escape(title), styles["title"]))
         if index == 0:
             story.append(
-                Paragraph("RESILIENCE-ALPHA · Workshop EPSI M2 · 19 octobre 2026", styles["small"])
+                Paragraph("RESILIENCE-ALPHA · Workshop EPSI M2 · 22 octobre 2026", styles["small"])
             )
         markdown.append("\n## " + title)
         for paragraph in paragraphs:
             style = styles["small"] if paragraph.startswith("[1]") else styles["body"]
             story.append(Paragraph(escape(paragraph).replace("\n", "<br/>"), style))
             markdown.append("\n" + paragraph)
+        if index == 1:
+            rows = [
+                ["PLAN", "FLUX ET FRONTIÈRES"],
+                ["Métier", "Client > WAF HTTP/TLS > Nginx/React > Auth / API > PostgreSQL"],
+                ["Observation", "Logs WAF/API > Superviseur + SQLite > Loki ; métriques > Prometheus > Grafana"],
+                ["Reprise", "Modèle ML > garde-fous > exécuteur Ansible > politique > API > paiement de preuve"],
+                ["Accès physique", "Auth > agent caméra HTTPS hôte ; ESP8266 > WAF > état LED"],
+                ["Assistance", "Documents locaux > TF-IDF > Ollama > réponse citée ; aucun droit d'action"],
+            ]
+            diagram = Table([[Paragraph(escape(cell), styles["small"]) for cell in row]
+                             for row in rows], colWidths=[95, 385], hAlign="LEFT")
+            diagram.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E4E6F3")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F6F8FC"), colors.white]),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ]))
+            story.extend([Spacer(1, 8), diagram])
+        if title.endswith("Analyse de risques EBIOS RM"):
+            rows = [
+                ["RISQUE", "G / V initiale", "V résiduelle", "TRAITEMENT / ÉCART"],
+                ["Saturation", "3 / 4", "2", "Quarantaine ; source distribuée hors couverture"],
+                ["Doublon", "3 / 3", "1", "Idempotence et unicité en base"],
+                ["Abus de reprise", "4 / 3", "2", "Clé, CIDR et action bornée"],
+                ["Perte d'hôte", "4 / 2", "2", "Copie externe et PRA hors hôte absents"],
+                ["Usurpation faciale", "À coter", "Non mesurée", "LBPH sans anti-photo ; recette à réaliser"],
+            ]
+            risk_table = Table([[Paragraph(escape(cell), styles["small"]) for cell in row]
+                                for row in rows], colWidths=[100, 80, 80, 220], hAlign="LEFT")
+            risk_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E4E6F3")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LINEBELOW", (0, 0), (-1, -1), 0.4, colors.HexColor("#CBD5E1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]))
+            story.extend([Spacer(1, 8), risk_table])
         if index == 0:
             rows = [
                 [Paragraph("Membre", styles["small"]), Paragraph("Rôle principal", styles["small"])]
